@@ -5,17 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ad Points System</title>
     <script src='//niphaumeense.net/vignette.min.js' data-zone='8442747' data-sdk='show_8442747'></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Telegram WebApp SDK -->
 </head>
 <body>
     <h1>Welcome to the Ad Points System!</h1>
-    <h3>Your Telegram Username: <span id="username"></span></h3> <!-- টেলিগ্রাম ইউজারনেম এখানে -->
-    <p>Your Points: <span id="points">0</span></p> <!-- পয়েন্ট দেখানোর জন্য -->
+    <h3>Your Telegram Username: <span id="username"></span></h3>
+    <p>Your Points: <span id="points">0</span></p>
     <button id="watchAd">Watch Ad</button>
 
     <script>
-        // Get Telegram username from the Telegram Web App
-        const userData = Telegram.WebApp.initDataUnsafe; // টেলিগ্রাম API থেকে ইউজার ডেটা নিয়ে আসুন
-        const username = userData.user.username || 'Unknown'; // ইউজারনেম পেয়ে থাকলে তা নিন
+        // Telegram থেকে ইউজার ডেটা নিয়ে আসা
+        const userData = window.Telegram.WebApp.initDataUnsafe;
+        const username = userData?.user?.username || 'Unknown';
 
         document.getElementById('username').innerText = username;
 
@@ -23,18 +24,20 @@
             show_8442747().then(() => {
                 alert('You have seen the ad!');
 
-                // ইউজারের পয়েন্ট আপডেট করার জন্য সার্ভারে পাঠান
-                fetch('/update-points', {
+                // পয়েন্ট আপডেট করার জন্য রিকোয়েস্ট
+                fetch('https://free-mining-git-master-shuaib017s-projects.vercel.app/update-points', {
                     method: 'POST',
-                    body: JSON.stringify({ username: username }),
                     headers: {
-                        'Content-Type': 'application/json'
-                    }
-                }).then(response => response.json())
-                  .then(data => {
-                      // পয়েন্ট আপডেট করার পর UI-তে দেখান
-                      document.getElementById('points').innerText = data.points;
-                  });
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${userData.query_id}`, 
+                    },
+                    body: JSON.stringify({ username: username })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('points').innerText = data.points;
+                })
+                .catch(error => console.error('Error updating points:', error));
             });
         });
     </script>
