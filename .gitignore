@@ -1,0 +1,12 @@
+# Environment variables file
+.env
+
+# Node.js modules
+node_modules/
+
+# Log files
+*.log
+
+# Temporary files
+tmp/
+temp/
