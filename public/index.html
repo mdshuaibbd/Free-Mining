@@ -1,45 +1,33 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ad Points System</title>
-    <script src='//niphaumeense.net/vignette.min.js' data-zone='8442747' data-sdk='show_8442747'></script>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Telegram WebApp SDK -->
-</head>
-<body>
-    <h1>Welcome to the Ad Points System!</h1>
-    <h3>Your Telegram Username: <span id="username"></span></h3>
-    <p>Your Points: <span id="points">0</span></p>
-    <button id="watchAd">Watch Ad</button>
+document.getElementById("connectBtn").addEventListener("click", async function() {
+  try {
+    // 1. SignClient ইনিশিয়ালাইজ করা
+    const signClient = await SignClient.init({
+      projectId: "c109ebd211a0150bc7e145f58e146a75", // আপনার প্রকল্প ID
+    });
 
-    <script>
-        // Telegram থেকে ইউজার ডেটা নিয়ে আসা
-        const userData = window.Telegram.WebApp.initDataUnsafe;
-        const username = userData?.user?.username || 'Unknown';
+    // 2. কানেকশন সেটিংস নির্ধারণ
+    await signClient.connect({
+      methods: ["eth_sendTransaction", "eth_sign"],  // সেশন অনুমতিগুলি
+      chains: ["eip155:1"], // চেইন নির্ধারণ (Ethereum Mainnet)
+    });
 
-        document.getElementById('username').innerText = username;
+    // 3. QR কোড মডাল প্রদর্শন করা
+    const uri = await signClient.getUri();
+    const qrCodeContainer = document.getElementById("qrCodeContainer");
+    qrCodeContainer.style.display = "block";
+    
+    // QR কোড পেস্ট করা
+    const qrCode = document.getElementById("qrCode");
+    qrCode.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(uri)}&size=200x200" alt="QR Code" />`;
 
-        document.getElementById('watchAd').addEventListener('click', () => {
-            show_8442747().then(() => {
-                alert('You have seen the ad!');
-
-                // পয়েন্ট আপডেট করার জন্য রিকোয়েস্ট
-                fetch('https://free-mining-git-master-shuaib017s-projects.vercel.app/update-points', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${userData.query_id}`, 
-                    },
-                    body: JSON.stringify({ username: username })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('points').innerText = data.points;
-                })
-                .catch(error => console.error('Error updating points:', error));
-            });
-        });
-    </script>
-</body>
-</html>
+    // 4. সেশন অনুমোদন করা
+    await signClient.awaitSession();
+    
+    // 5. সেশন সফলভাবে কানেক্ট হওয়া
+    const status = document.getElementById("status");
+    status.style.display = "block";
+    qrCodeContainer.style.display = "none";
+  } catch (error) {
+    console.error("Error during WalletConnect:", error);
+  }
+});
